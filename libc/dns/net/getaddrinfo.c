@@ -399,6 +399,15 @@ bool readBE32(FILE* fp, int32_t* result) {
   return true;
 }
 
+bool readBE32(FILE* fp, int32_t* result) {
+  int32_t tmp;
+  if (fread(&tmp, sizeof(tmp), 1, fp) != 1) {
+    return false;
+  }
+  *result = ntohl(tmp);
+  return true;
+}
+
 // Returns 0 on success, else returns on error.
 static int
 android_getaddrinfo_proxy(
