@@ -2246,6 +2246,9 @@ static void soinfo_unload(soinfo* soinfos[], size_t count) {
         if (local_unload_list.contains(child)) {
           continue;
         } else if (child->is_linked() && child->get_local_group_root() != root) {
+          child->get_parents().remove_if([&] (const soinfo* parent) {
+            return parent == si;
+          });
           external_unload_list.push_back(child);
         } else {
           unload_list.push_front(child);
@@ -3950,11 +3953,13 @@ bool soinfo::link_image(const soinfo_list_t& global_group, const soinfo_list_t& 
 #if !defined(__LP64__)
   if (has_text_relocations) {
     // Fail if app is targeting sdk version > 22
+#if !defined(__i386__) // ffmpeg says that they require text relocations on x86
     if (get_application_target_sdk_version() > 22) {
       PRINT("%s: has text relocations", get_realpath());
       DL_ERR("%s: has text relocations", get_realpath());
       return false;
     }
+#endif
     // Make segments writable to allow text relocations to work properly. We will later call
     // phdr_table_protect_segments() after all of them are applied.
     DL_WARN("%s has text relocations. This is wasting memory and prevents "
